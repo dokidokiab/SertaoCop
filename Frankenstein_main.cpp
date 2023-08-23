@@ -2,22 +2,27 @@
 #include <Servo.h>
 #include <Arduino.h> //intelisense pra .ino
 //pinos do HCSRO04
-#define trig 10
+#define trig 9
 #define echo 7
 // bool 1 para preto
 // bool 0 para branco 
+// Preto analógico > 595
+// Branco analógico < 100
 //pinos do primeiro sensor IR
-#define IR_esquerda A1
-#define IResquerda 8
+#define IR_esquerda A4
+#define IResquerda 12
 //pinos do segundo sensor IR
-#define IR_direita A0
-#define IRdireita 2
+#define IR_direita A5
+#define IRdireita 13
+// teste
+#define teste  2
 // Motor Esquerda connections
 #define IN1 3
 #define IN2 5
 // Motor Direita connections
 #define IN3 6
 #define IN4 11
+// a velocidade do robo é aproximadamente 15cm/s 
 //pino servo
 #define servo 10
 // pino botão
@@ -25,7 +30,7 @@
 //definição do nome do servo Servo.h
 Servo garra; 
 
-int leitura_IRLA, leitura_IRRA, velo, velo_giro; // define os valores inteiros 
+int distanciaF, deslocamento, leitura_IRLA, leitura_IRRA, velo, velo_giro, velocidade_L, velocidade_R, leitura_teste; // define os valores inteiros 
 bool leitura_botao, leitura_IRL, leitura_IRR; //define os valores booleanos 
 float duracao; //define os valores decimais 
 
@@ -33,12 +38,14 @@ void sensorIRl(){
   //atualiza a leitura do sensor da esquerda
   leitura_IRL = digitalRead(IResquerda); //leitura digital sensor esquerda
   leitura_IRLA = analogRead(IR_esquerda); //leitra analogica sensor esquerda
+  
 }
 
 void sensorIRR(){
   //atualiza o sensor da direita
   leitura_IRR = digitalRead(IRdireita); //leitra digital sensor direita
   leitura_IRRA = analogRead(IR_direita); //leitura analogica sensor direita
+  
 }
 
 void movimento(int direcao, int velocidade){  // velocidade vai de 0 até 255
@@ -88,6 +95,14 @@ void movimento(int direcao, int velocidade){  // velocidade vai de 0 até 255
       break;
   }
 }
+
+void movimento_analog (int velocidade_L ,int velocidade_R){
+  //realia o movimento intermintente dos motores baseado na medição analógica dos sensores, necessita de ajustes de erro. 
+  analogWrite(IN1, 0);
+  analogWrite(IN2, leitura_IRLA);
+  analogWrite(IN3, 0);
+  analogWrite(IN4, leitura_IRRA);
+}
 float distancia(){
   //define a função que obtem o valor da distância do sensor de distância HCSR04
   digitalWrite(trig, LOW);
@@ -127,36 +142,37 @@ void setup() {
   pinMode(IR_esquerda, INPUT);
   pinMode(IRdireita, INPUT);
   pinMode(IR_direita, INPUT);
+  //teste 
+  pinMode(teste, INPUT);
   //biblioteca servo
   garra.attach(servo);
   //velocidade padrão
-  velo = 150;
-  velo_giro = 200;
+  velo = 100; //MÍNIMA
+  velo_giro = 110;
   delay(1000);
+
 }
 
 void loop() {
+
   sensorIRl();
   sensorIRR();
-  Serial.print("Sensor R digital: " + leitura_IRR);
-  Serial.print("Sensor L digital: " + leitura_IRL);
-  if(leitura_IRL == 0 && leitura_IRR == 0){
-    movimento(0, velo);
-    delay(250);
+
+
+  if((leitura_IRL == 0 && leitura_IRL <1) && (leitura_IRR == 0 && leitura_IRL <1)){
     movimento(1, velo);
   } 
 
   if(leitura_IRL == 1 && (leitura_IRR == 0 && leitura_IRR < 1)){
-    movimento(0, velo);
-    delay(500);
-    movimento(3, velo_giro);
-    delay(500);
+    movimento(4, velo_giro);
+    
   }
 
-  if((leitura_IRL == 0 && leitura_IRL < 1) && leitura_IRR == 1){
-    movimento(0, velo);
-    delay(500);
-    movimento(4, velo_giro);
-    delay(500);
-  } 
+  if((leitura_IRL == 0 && leitura_IRL < 1) && leitura_IRR == 1){ 
+    movimento(3, velo_giro);  
+    
+  }
+
+  Serial.println(distancia()); 
+
 }
