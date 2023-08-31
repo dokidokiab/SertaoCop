@@ -5,28 +5,23 @@
 #include <Adafruit_APDS9960.h>
 
 //pinos do HCSRO04
-#define TRIGGER_PIN 10
-#define ECHO_PIN 11
-
-//pinos leds teste distancia
-#define vermelho 13
-#define amarelo 12
-#define verde  10
+#define TRIGGER_PIN 28
+#define ECHO_PIN 26
 
 //pinos do primeiro sensor IR
-#define led_diodo1 A0
+#define led_diodo1 22
 #define led_preto1 9 //provavelmente usar um pino digital pros 2 sensores IR 
 
 //pinos do primeiro sensor IR
-#define led_diodo2 A1
+#define led_diodo2 24
 #define led_preto2 8 //provavelmente usar um pino digital pros 2 sensores IR 
 
 // Motor A connections
-#define motorA1 3
-#define motorA2 2
+#define motorA1 4
+#define motorA2 5
 // Motor B connections
-#define motorB1 1 // mudar
-#define motorB2 0 //mudar
+#define motorB1 6 // mudar
+#define motorB2 7 //mudar
 
 int sensor_IR1;
 int sensor_IR2;
@@ -126,12 +121,19 @@ void movimento(int direcao, int velocidade){  // velocidade vai de 0 até 255
       break;
     }
   }
-void identificarVerde(){
-
+ /*
+void identificarVerde(bool Verde){
+  if(green > blue && green > red){
+    Verde = true;
+    }
+  else{
+    Verde = false;
+    }
 }
-
+*/
 void loop() {
-  
+  movimento(1, 100);
+  /*
   if (apds.getColorData(&red, &green, &blue, &clear)) {
     Serial.println("Error al leer los valores de color");
     return;
@@ -150,24 +152,39 @@ void loop() {
   if (sensor_IR1 && sensor_IR2){
     //caso tudo preto, vai pra tras e vê se tem verde
     movimento(2, 100);
-    
-    movimento(3, 50);
-    movimento(0, 0);
-    identificarVerde();
 
-    movimento(4, 100);
+    //esquerdista looking for VERDINHO
+    movimento(3, 50);
+    delay(1000);
     movimento(0, 0);
-    identificarVerde();
+    identificarVerde(isGreenLTrue);
+    
+    delay(1000);
+
+    movimento(4, 50);
+    delay(1000);
+
+    //conservador looking for VERDINHO
+
+    movimento(4, 50);
+    delay(1000);
+    movimento(0, 0);
+    identificarVerde(isGreenRTrue);
+
+    delay(1000);
 
     if(isGreenRTrue && isGreenRFalse){
       movimento(1, 200);
 
     }
     else if(isGreenRTrue){
-
+      movimento(4, 50);
+      movimento(1, 200);
+      
     }
     else if(isGreenLTrue){
-
+      movimento(3, 50);
+      movimento(1, 200);
     }
     else{
       movimento(1, 200);
@@ -215,5 +232,5 @@ void loop() {
   
 
   delay(2000);
-
+  */
 }
