@@ -4,7 +4,7 @@
 //pinos do HCSRO04 frontal
 #define trig 10
 #define echo 8
-//pinos do sensor de distância lateral
+//pinos do HCSR004 lateral
 #define trig1 9
 #define echo1 13
 // bool 1 para preto
@@ -54,6 +54,7 @@ void atualizar_sensoresA(){
   leitura_IRLA = analogRead(IR_esquerda); //leitra analogica sensor da esquerda
 }
 
+//funções de controle motores
 // velocidade vai de 0 até 255
 void stop(int espera){//parado
       analogWrite(IN1, 0);
@@ -100,10 +101,10 @@ void proprio_eixoL(int velocidade){//giro no proprio eixo pra esquerda
 }
 
 bool verdeL(){// valor do verde = 47 e 48 no teste
-  return leitura_IRLA < Preto && leitura_IRLA > BrancoL;
+  return ((leitura_IRLA < Preto) && (leitura_IRLA > BrancoL)) || (leitura_IRLA == VerdeL);
 }
 bool verdeR(){ // Valor do verde
-  return leitura_IRRA < Preto && leitura_IRRA > BrancoR;
+  return ((leitura_IRRA) < Preto && (leitura_IRRA > BrancoR)) || (leitura_IRLA == VerdeL);
 }
 
 float distancia(){
@@ -140,32 +141,42 @@ void DOWN_servo(){ // Abaixa a garra
 }
 
 void Giro90L(){ //giro de 90 graus esquerda
-  proprio_eixoL(velo_giro);
+  proprio_eixoL(velo_giro);//Delay de 1340 para meia volta
   delay(1340);
   stop(0);
 }
 
 void Giro90R(){//giro de 90 graus direita
-  proprio_eixoR(velo_giro);
+  proprio_eixoR(velo_giro);//Delay de 1340 para meia volta
   delay(1340);
   stop(0);
 }
 
 void Giro90LL(){//giro de 90 graus em relação a linha
-  do {proprio_eixoL(velo); //Delay de 1340 para meia volta
+  do {proprio_eixoL(velo); 
   }while((leitura_IRL != 0) && (leitura_IRmeio != 1) && (leitura_IRR != 1) );}
 
 void Giro90LR(){
-  do {proprio_eixoR(velo); //Delay de 1340 para meia volta
+  do {proprio_eixoR(velo); 
   }while((leitura_IRL != 0) && (leitura_IRmeio != 1) && (leitura_IRR != 1) );}
 
 void verifica_verde(){
-  atualizar_sensores();
+  atualizar_sensoresA();
   stop(250);
   tras(velo);
-  if (leitura_IRLA < valor_verde){
+  delay(50);
+  stop(0);
+  atualizar_sensoresA();
+  if (verdeL()){
     stop(250);
-  } 
+    Giro90LL();}
+  else if (verdeR()) {
+    stop(250);
+    Giro90R();}
+  else if (verdeL() && verdeR()){
+    stop(250);
+    Giro90R();
+    Giro90R();}
 }
 
 void desviar(){
@@ -212,27 +223,20 @@ void setup() {
   pinMode(IR_direita, INPUT);
   pinMode(IRmeio, INPUT);
   //biblioteca servo
-
   //pinos dos servos
   pinMode(Astrolabio, OUTPUT);
   pinMode(Astrolabio2, OUTPUT);
-
   pa.attach(Astrolabio);
-  garra.attach(Astrolabio2);
-  UP_servo();
-  
-
+  garra.attach(Astrolabio2);  
   //velocidade padrão
-  velo = 90; //MÍNIMA
+  velo = 90; //velocidade aceitavél
   velo_giro = 150;
   velo_min = 0;
-
   // valor preto (mentira)
   Preto = 100;
   // Valores da calibragem das cores do sensor IR direito
   BrancoR = 46;
   VerdeR = 47;
-
   // Valores da calibragem das cores do sensor IR esquerdo
   BrancoL = 50;
   VerdeL = 52;
@@ -303,7 +307,7 @@ void loop() {
       frente(velo_giro);}
     atualizar_sensores();}
 
-//Imprimindo as leituras dos sensores
+//Imprimindo as leituras dos sensores (debug e calibração)
     Serial.print("Leitura IRRA: ");
     Serial.print(leitura_IRRA);
     Serial.println(" | ");
